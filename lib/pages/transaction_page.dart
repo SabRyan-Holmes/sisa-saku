@@ -106,6 +106,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                   } else {
                     if (snapshot.hasData) {
                       if (snapshot.data!.length > 0) {
+                        selectedCategory = snapshot.data!.first;
                         print('Apanih : ' + snapshot.data!.toString());
                         return Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -180,7 +181,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 controller: imageController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                    border: UnderlineInputBorder(), labelText: "Image"),
+                    border: UnderlineInputBorder(),
+                    labelText: "Insert image(optional)"),
               ),
             ),
             SizedBox(height: 25),
