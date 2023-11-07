@@ -7,8 +7,8 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sisasaku/models/category.dart';
+import 'package:sisasaku/models/transaction_with_category.dart';
 import 'package:sisasaku/models/transactions.dart';
-// import 'package:sisasaku/pages/category_page.dart';
 
 part 'database.g.dart';
 
@@ -30,15 +30,51 @@ class AppDb extends _$AppDb {
   }
 
 // Update
-  Future updateCategory(int id, String name) async {
+  Future updateCategoryRepo(int id, String name) async {
     return (update(categories)..where((tbl) => tbl.id.equals(id))).write(
       CategoriesCompanion(name: Value(name)),
     );
   }
 
+  Future updateTransactionRepo(int id, int amount, int categoryId,
+      DateTime transactionDate, String deskripsi) async {
+    return (update(transactions)..where((tbl) => tbl.id.equals(id))).write(
+      TransactionsCompanion(
+        name: Value(deskripsi),
+        amount: Value(amount),
+        category_id: Value(categoryId),
+        transaction_date: Value(transactionDate),
+      ),
+    );
+  }
+
 // Delete
-  Future deleteCategory(int id) async {
+  Future deleteCategoryRepo(int id) async {
     return (delete(categories)..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  Future deleteTransactionRepo(int id) async {
+    return (delete(transactions)..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  // transaksi
+  Stream<List<TransactionWithCategory>> getTransactionByDate(DateTime date) {
+    final query = (select(transactions).join([
+      innerJoin(
+        categories,
+        categories.id.equalsExp(transactions.category_id),
+      ),
+    ])
+      ..where(transactions.transaction_date.equals(date)));
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithCategory(
+          row.readTable(transactions),
+          row.readTable(categories),
+        );
+      }).toList();
+    });
   }
 }
 

@@ -2,101 +2,154 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:sisasaku/models/database.dart';
+import 'package:sisasaku/models/transaction_with_category.dart';
+import 'package:sisasaku/pages/main_page.dart';
 
-class TransactionsPage extends StatefulWidget {
-  const TransactionsPage({super.key});
+class TransactionPage extends StatefulWidget {
+  final TransactionWithCategory? transactionWithCategory;
+  const TransactionPage({
+    super.key,
+    required this.transactionWithCategory,
+  });
 
   @override
-  State<TransactionsPage> createState() => _TransactionsPageState();
+  State<TransactionPage> createState() => _TransactionPageState();
 }
 
-class _TransactionsPageState extends State<TransactionsPage> {
-  final AppDb database = AppDb();
+class _TransactionPageState extends State<TransactionPage> {
   bool isExpense = true;
   late int type;
-  List<String> list = ["Makan dan Minum", "Fashion", "Transportasi", 'Hiburan'];
-  late String dropdownValue = list.first;
-  TextEditingController amountController = TextEditingController();
+  final AppDb database = AppDb();
+
   TextEditingController dateController = TextEditingController();
-  TextEditingController detailController = TextEditingController();
-  TextEditingController imageController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
+  TextEditingController deskripsiController = TextEditingController();
   Category? selectedCategory;
-
-  Future insert(int amount, DateTime date, String detail, int categoryId,
-      String pathImage) async {
-    DateTime now = DateTime.now();
-    final row = await database.into(database.transactions).insertReturning(
-        TransactionsCompanion.insert(
-            name: detail,
-            path_image: pathImage,
-            category_id: categoryId,
-            transaction_date: date,
-            createdAt: now,
-            updatedAt: now));
-  }
-
-  // Get Category
   Future<List<Category>> getAllCategory(int type) async {
     return await database.getAllCategoryRepo(type);
   }
 
+  String dbDate = '';
+
+  @override
   void initState() {
-    type = 2;
+    if (widget.transactionWithCategory != null) {
+      updateTransactionView(widget.transactionWithCategory!);
+    } else {
+      type = 2;
+    }
     super.initState();
+  }
+
+  void updateTransactionView(TransactionWithCategory transactionWithCategory) {
+    amountController.text =
+        transactionWithCategory.transaction.amount.toString();
+    deskripsiController.text = transactionWithCategory.transaction.name;
+    dateController.text = DateFormat('dd-MMMM-yyyy')
+        .format(transactionWithCategory.transaction.transaction_date);
+    dbDate = DateFormat('yyyy-MM-dd')
+        .format(transactionWithCategory.transaction.transaction_date);
+    type = transactionWithCategory.category.type;
+    (type == 2) ? isExpense = true : isExpense = false;
+    selectedCategory = transactionWithCategory.category;
+  }
+
+  Future insert(
+      int amount, DateTime date, String deskripsi, int categoryId) async {
+    DateTime now = DateTime.now();
+    final row = await database.into(database.transactions).insertReturning(
+          TransactionsCompanion.insert(
+            name: deskripsi,
+            category_id: categoryId,
+            transaction_date: date,
+            amount: amount,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    print(row.toString());
+  }
+
+  Future update(int transactionId, int amount, int categoryId,
+      DateTime transactionDate, String deskripsi) async {
+    return await database.updateTransactionRepo(
+      transactionId,
+      amount,
+      categoryId,
+      transactionDate,
+      deskripsi,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Transactions'),
+        title: Text(
+          'Tambah Transaksi',
+        ),
       ),
       body: SingleChildScrollView(
         child: SafeArea(
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Switch(
-                  value: isExpense,
-                  onChanged: (bool value) {
-                    setState(() {
-                      isExpense = value;
-                      type = (isExpense) ? 2 : 1;
-                      selectedCategory = null;
-                    });
-                  },
-                  inactiveTrackColor: Colors.green[200],
-                  inactiveThumbColor: Colors.green,
-                  activeColor: Colors.red,
-                ),
-                Text((isExpense) ? 'Expense' : 'Income',
-                    style: GoogleFonts.montserrat(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Row(
+                  children: [
+                    Switch(
+                      value: isExpense,
+                      onChanged: (bool value) {
+                        setState(
+                          () {
+                            isExpense = value;
+                            type = (isExpense) ? 2 : 1;
+                            selectedCategory = null;
+                          },
+                        );
+                      },
+                      inactiveTrackColor: Colors.green,
+                      activeColor: Colors.white,
+                      activeTrackColor: Colors.red,
+                    ),
+                    Text(
+                      isExpense ? 'Pengeluaran' : 'Pemasukan',
+                      style: GoogleFonts.montserrat(
                         fontSize: 14,
-                        color: (isExpense) ? Colors.red : Colors.green))
-              ],
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextFormField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                    border: UnderlineInputBorder(), labelText: "Amount"),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 25),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text('Category',
-                  style: GoogleFonts.montserrat(
-                      fontSize: 17, fontWeight: FontWeight.w500)),
-            ),
-            FutureBuilder<List<Category>>(
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                ),
+                child: TextFormField(
+                  controller: amountController,
+                  cursorColor: (isExpense) ? Colors.red : Colors.green,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    border: UnderlineInputBorder(),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: (isExpense)
+                          ? BorderSide(
+                              color: Colors.red,
+                            )
+                          : BorderSide(
+                              color: Colors.green,
+                            ),
+                    ),
+                    labelText: 'Jumlah Uang',
+                    floatingLabelStyle: TextStyle(
+                      color: (isExpense) ? Colors.red : Colors.green,
+                    ),
+                  ),
+                ),
+              ),
+
+              FutureBuilder<List<Category>>(
                 future: getAllCategory(type),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -106,103 +159,200 @@ class _TransactionsPageState extends State<TransactionsPage> {
                   } else {
                     if (snapshot.hasData) {
                       if (snapshot.data!.length > 0) {
-                        selectedCategory = snapshot.data!.first;
-                        print('Apanih : ' + snapshot.data!.toString());
                         return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: DropdownButton<Category>(
-                              value: (selectedCategory == null)
-                                  ? snapshot.data!.first
-                                  : selectedCategory,
-                              isExpanded: true,
-                              icon: Icon(Icons.arrow_downward),
-                              items: snapshot.data!.map((Category item) {
-                                return DropdownMenuItem<Category>(
-                                  value: item,
-                                  child: Text(item.name),
-                                );
-                              }).toList(),
-                              onChanged: (Category? value) {
-                                setState(() {
-                                  selectedCategory = value;
-                                });
-                              }),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: DropdownButtonFormField<Category>(
+                            decoration: InputDecoration(
+                              hintText: 'Pilih Kategori',
+                            ),
+                            isExpanded: true,
+                            value: selectedCategory,
+                            icon: Icon(
+                              Icons.arrow_downward,
+                            ),
+                            items: snapshot.data!.map((Category item) {
+                              return DropdownMenuItem<Category>(
+                                value: item,
+                                child: Text(item.name),
+                              );
+                            }).toList(),
+                            onChanged: (Category? value) {
+                              setState(() {
+                                selectedCategory = value;
+                              });
+                            },
+                          ),
                         );
                       } else {
-                        return Center(
-                          child: Text('Data Kosong'),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 24.0, horizontal: 18.0),
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Kategori tidak ada'),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => MainPage(
+                                          params: 1,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  icon: Icon(Icons.add),
+                                  label: Text('Tambah kategori'),
+                                  style: ButtonStyle(
+                                    backgroundColor:
+                                        // (isExpense) ? MaterialStateProperty.all<Color>(Colors.red) :
+                                        MaterialStateProperty.all<Color>(
+                                            Colors.cyan[600]!),
+                                    shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(18.0),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       }
                     } else {
-                      return Center(
-                        child: Text('Tidak ada data'),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
+                        child: Center(
+                          child: Text('Kategori tidak ada'),
+                        ),
                       );
                     }
                   }
-                }),
-            SizedBox(height: 25),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextFormField(
-                controller: dateController,
-                decoration: InputDecoration(
-                  labelText: "Enter Date",
-                ),
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2099));
-
-                  if (pickedDate != null) {
-                    String formattedDate =
-                        DateFormat('yyyy-MM-dd').format(pickedDate);
-
-                    dateController.text = formattedDate;
-                  }
                 },
               ),
-            ),
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextFormField(
-                controller: detailController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                    border: UnderlineInputBorder(), labelText: "Detail"),
-              ),
-            ),
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextFormField(
-                controller: imageController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                    border: UnderlineInputBorder(),
-                    labelText: "Insert image(optional)"),
-              ),
-            ),
-            SizedBox(height: 25),
-            Center(
-                child: ElevatedButton(
-                    onPressed: () {
-                      insert(
-                          int.parse(amountController.text),
-                          DateTime.parse(dateController.text),
-                          detailController.text,
-                          selectedCategory!.id,
-                          imageController.text);
+              // SizedBox(
+              //   height: 10,
+              // ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: TextFormField(
+                  cursorColor: (isExpense) ? Colors.red : Colors.green,
+                  readOnly: true,
+                  controller: dateController,
+                  decoration: InputDecoration(
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: (isExpense)
+                          ? BorderSide(
+                              color: Colors.red,
+                            )
+                          : BorderSide(
+                              color: Colors.green,
+                            ),
+                    ),
+                    labelText: 'Pilih Tanggal',
+                    floatingLabelStyle: TextStyle(
+                      color: (isExpense) ? Colors.red : Colors.green,
+                    ),
+                  ),
+                  onTap: () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialEntryMode: DatePickerEntryMode.calendarOnly,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2099),
+                    );
 
-                      print('amount : ' + amountController.text);
-                      print('amount : ' + dateController.text);
-                      print('amount : ' + detailController.text);
-                    },
-                    child: Text('Save')))
-          ],
-        )),
+                    if (pickedDate != Null) {
+                      String formattedDate =
+                          DateFormat('dd-MMMM-yyyy').format(pickedDate!);
+                      dateController.text = formattedDate;
+                      String data = DateFormat('yyyy-MM-dd').format(pickedDate);
+                      setState(() {
+                        dbDate = data;
+                      });
+                    }
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                ),
+                child: TextFormField(
+                  controller: deskripsiController,
+                  cursorColor: (isExpense) ? Colors.red : Colors.green,
+                  decoration: InputDecoration(
+                    border: UnderlineInputBorder(),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: (isExpense)
+                          ? BorderSide(
+                              color: Colors.red,
+                            )
+                          : BorderSide(
+                              color: Colors.green,
+                            ),
+                    ),
+                    labelText: 'Deskripsi',
+                    floatingLabelStyle: TextStyle(
+                      color: (isExpense) ? Colors.red : Colors.green,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 25,
+              ),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    (widget.transactionWithCategory == null)
+                        ? insert(
+                            int.parse(amountController.text),
+                            DateTime.parse(dbDate),
+                            deskripsiController.text,
+                            selectedCategory!.id,
+                          )
+                        : await update(
+                            widget.transactionWithCategory!.transaction.id,
+                            int.parse(amountController.text),
+                            selectedCategory!.id,
+                            DateTime.parse(dbDate),
+                            deskripsiController.text,
+                          );
+
+                    // Navigator.pop(context);
+                    await Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MainPage(
+                          params: 0,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Simpan',
+                  ),
+                  style: ButtonStyle(
+                    backgroundColor:
+                        // (isExpense) ? MaterialStateProperty.all<Color>(Colors.red) :
+                        MaterialStateProperty.all<Color>(Colors.cyan[600]!),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18.0),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
