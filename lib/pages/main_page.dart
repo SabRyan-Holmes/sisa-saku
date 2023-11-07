@@ -99,20 +99,44 @@ class _MainPageState extends State<MainPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            IconButton(
-              onPressed: () {
-                updateView(0, DateTime.now());
-              },
-              icon: Icon(Icons.home),
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16.0),
+                    color: (currentIndex == 0) ? Colors.blue : Colors.white,
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      updateView(0, DateTime.now());
+                    },
+                    icon: Icon(Icons.home),
+                  ),
+                ),
+              ),
             ),
             SizedBox(
               width: 20,
             ),
-            IconButton(
-              onPressed: () {
-                updateView(1, null);
-              },
-              icon: Icon(Icons.list),
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16.0),
+                    color: (currentIndex == 1) ? Colors.blue : Colors.white,
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      updateView(1, null);
+                    },
+                    icon: Icon(Icons.list),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
