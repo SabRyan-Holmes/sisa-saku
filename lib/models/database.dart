@@ -23,6 +23,36 @@ class AppDb extends _$AppDb {
   @override
   int get schemaVersion => 1;
 
+  Future<int> getTotalAmountForTypeAndDate(int type) {
+    final query = customSelect(
+      'SELECT SUM(amount) AS totalAmount FROM transactions '
+      'WHERE category_id IN ('
+      '  SELECT id FROM categories WHERE type = ?'
+      ') ',
+      variables: [
+        Variable.withInt(type),
+      ],
+      readsFrom: {transactions, categories},
+    );
+
+    return query.map((row) => row.read<int>('totalAmount')).getSingle();
+  }
+
+  Future<int> countType(int type) {
+    final query = customSelect(
+      'SELECT COUNT(amount) AS countType FROM transactions '
+      'WHERE category_id IN ('
+      '  SELECT id FROM categories WHERE type = ?'
+      ') ',
+      variables: [
+        Variable.withInt(type),
+      ],
+      readsFrom: {transactions, categories},
+    );
+
+    return query.map((row) => row.read<int>('countType')).getSingle();
+  }
+
 // CRUD
   Future<List<Category>> getAllCategoryRepo(int type) async {
     return await (select(categories)..where((tbl) => tbl.type.equals(type)))

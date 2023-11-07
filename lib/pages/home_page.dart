@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:sisasaku/models/database.dart';
 import 'package:sisasaku/models/transaction_with_category.dart';
+import 'package:sisasaku/pages/main_page.dart';
 import 'package:sisasaku/pages/transaction_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,6 +20,40 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final AppDb database = AppDb();
 
+  int totalAmount1 = 0;
+  int totalAmount2 = 0;
+  int rest = 0;
+  int result1 = 0;
+  int result2 = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final type1 = 1;
+    final type1Count = await database.countType(type1);
+
+    if (type1Count > 0) {
+      result1 = await database.getTotalAmountForTypeAndDate(type1);
+    }
+
+    final type2 = 2;
+    final type2Count = await database.countType(type2);
+
+    if (type2Count > 0) {
+      result2 = await database.getTotalAmountForTypeAndDate(type2);
+    }
+
+    setState(() {
+      totalAmount1 = result1;
+      totalAmount2 = result2;
+      rest = totalAmount1 - totalAmount2;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -34,82 +69,154 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.grey,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.download,
-                          color: Colors.green,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          Text(
-                            'Pemasukan',
-                            style: GoogleFonts.montserrat(
+                          Container(
+                            decoration: BoxDecoration(
                               color: Colors.white,
-                              fontSize: 12,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.download,
+                              color: Colors.green,
                             ),
                           ),
                           SizedBox(
-                            height: 10,
+                            width: 10,
                           ),
-                          Text(
-                            'Rp. 3.800.000',
-                            style: GoogleFonts.montserrat(
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Total Pemasukan',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Text(
+                                'Rp. ' +
+                                    (NumberFormat.currency(
+                                      locale: 'id',
+                                      decimalDigits: 0,
+                                    ).format(
+                                      totalAmount1,
+                                    )).replaceAll('IDR', ''),
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
                               color: Colors.white,
-                              fontSize: 14,
+                              borderRadius: BorderRadius.circular(8),
                             ),
+                            child: Icon(
+                              Icons.upload,
+                              color: Colors.red,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Total Pengeluaran',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Text(
+                                'Rp. ' +
+                                    (NumberFormat.currency(
+                                      locale: 'id',
+                                      decimalDigits: 0,
+                                    ).format(
+                                      totalAmount2,
+                                    )).replaceAll('IDR', ''),
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ],
                   ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Divider(
+                    color: Colors.white,
+                  ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.upload,
-                          color: Colors.red,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          Text(
-                            'Pengeluaran',
-                            style: GoogleFonts.montserrat(
+                          Container(
+                            decoration: BoxDecoration(
                               color: Colors.white,
-                              fontSize: 12,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.account_balance_wallet_rounded,
+                              color: Colors.brown,
                             ),
                           ),
                           SizedBox(
-                            height: 10,
+                            width: 10,
                           ),
-                          Text(
-                            'Rp.3.800.000',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Sisa Uang',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Text(
+                                'Rp. ' +
+                                    (NumberFormat.currency(
+                                      locale: 'id',
+                                      decimalDigits: 0,
+                                    ).format(
+                                      rest,
+                                    )).replaceAll('IDR', ''),
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -247,16 +354,28 @@ class _HomePageState extends State<HomePage> {
                                                                 ElevatedButton(
                                                                   onPressed:
                                                                       () async {
-                                                                    Navigator.of(
-                                                                            context,
-                                                                            rootNavigator:
-                                                                                true)
-                                                                        .pop();
+                                                                    // Navigator.of(
+                                                                    //         context,
+                                                                    //         rootNavigator:
+                                                                    //             true)
+                                                                    //     .pop();
                                                                     await database.deleteTransactionRepo(snapshot
                                                                         .data![
                                                                             index]
                                                                         .transaction
                                                                         .id);
+                                                                    await Navigator
+                                                                        .pushReplacement(
+                                                                      context,
+                                                                      MaterialPageRoute(
+                                                                        builder:
+                                                                            (context) =>
+                                                                                MainPage(
+                                                                          params:
+                                                                              0,
+                                                                        ),
+                                                                      ),
+                                                                    );
                                                                     setState(
                                                                         () {});
                                                                   },
