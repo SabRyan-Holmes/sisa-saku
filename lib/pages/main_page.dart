@@ -106,7 +106,8 @@ class _MainPageState extends State<MainPage> {
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16.0),
-                    color: (currentIndex == 0) ? Colors.blue : Colors.white,
+                    color:
+                        (currentIndex == 0) ? Colors.cyan[700] : Colors.white,
                   ),
                   child: IconButton(
                     onPressed: () {
@@ -127,7 +128,8 @@ class _MainPageState extends State<MainPage> {
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16.0),
-                    color: (currentIndex == 1) ? Colors.blue : Colors.white,
+                    color:
+                        (currentIndex == 1) ? Colors.cyan[700] : Colors.white,
                   ),
                   child: IconButton(
                     onPressed: () {
