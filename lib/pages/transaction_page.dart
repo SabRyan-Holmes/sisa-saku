@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:sisasaku/models/database.dart';
 import 'package:sisasaku/models/transaction_with_category.dart';
 import 'package:sisasaku/pages/main_page.dart';
+import 'package:sisasaku/widgets/image_input.dart';
+import 'dart:io';
 
 class TransactionPage extends StatefulWidget {
   final TransactionWithCategory? transactionWithCategory;
@@ -79,6 +81,12 @@ class _TransactionPageState extends State<TransactionPage> {
       transactionDate,
       deskripsi,
     );
+  }
+
+  // Parameter untuk ImageInput
+  File? savedImage;
+  void savedImages(File image) {
+    savedImage = image;
   }
 
   @override
@@ -303,6 +311,13 @@ class _TransactionPageState extends State<TransactionPage> {
                     ),
                   ),
                 ),
+              ),
+              SizedBox(
+                height: 25,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ImageInput(imagesaveat: savedImages),
               ),
               SizedBox(
                 height: 25,
